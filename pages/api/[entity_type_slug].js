@@ -148,12 +148,7 @@ async function create(req, res) {
         console.log('I AM HERE 3');
         await assertUserCan(readContents, req) &&
         await assertUserCan(writeContents, req);
-<<<<<<< HEAD
-
-        console.log('I AM HERE 2')
-=======
         console.log('I AM HERE 4');
->>>>>>> add-await-to-all-requests-2
         
         const { files, body: bodyRaw } = req;
         const body = JSON.parse(JSON.stringify(bodyRaw));
