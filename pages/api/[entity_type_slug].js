@@ -53,6 +53,7 @@ async function handler(req, res) {
       case "GET":
         return get(req, res);
       case "POST":
+        console.log('I AM HERE');
         const { req: parsedReq, res: parsedRes } = await parseFormData(
           req,
           res
@@ -147,12 +148,11 @@ async function create(req, res) {
 
         await assertUserCan(readContents, req) &&
         await assertUserCan(writeContents, req);
+
+        console.log('I AM HERE 2')
         
         const { files, body: bodyRaw } = req;
         const body = JSON.parse(JSON.stringify(bodyRaw));
-
-        console.log(body);
-        console.log(files);
 
         if (files.length > 0) {
           const resFromS3 = await addFilesToBucket(files, body);
