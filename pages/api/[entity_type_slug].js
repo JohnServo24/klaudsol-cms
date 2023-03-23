@@ -51,14 +51,15 @@ async function handler(req, res) {
   try {
     switch (req.method) {
       case "GET":
-        return get(req, res);
+        return await get(req, res);
       case "POST":
-        console.log('I AM HERE');
+        console.log('I AM HERE 1');
         const { req: parsedReq, res: parsedRes } = await parseFormData(
           req,
           res
         );
-        return create(parsedReq, parsedRes);
+        console.log('I AM HERE 2');
+        return await create(parsedReq, parsedRes);
       default:
         throw new Error(`Unsupported method: ${req.method}`);
     }
@@ -66,8 +67,6 @@ async function handler(req, res) {
     await defaultErrorHandler(error, req, res);
   }
 }
-
-
 
   async function get(req, res) { 
     try {
@@ -146,10 +145,15 @@ async function create(req, res) {
             loggedIn: true,
         }, req);
 
+        console.log('I AM HERE 3');
         await assertUserCan(readContents, req) &&
         await assertUserCan(writeContents, req);
+<<<<<<< HEAD
 
         console.log('I AM HERE 2')
+=======
+        console.log('I AM HERE 4');
+>>>>>>> add-await-to-all-requests-2
         
         const { files, body: bodyRaw } = req;
         const body = JSON.parse(JSON.stringify(bodyRaw));
@@ -163,6 +167,7 @@ async function create(req, res) {
           await Entity.create(body);
         }
 
+        console.log('I AM HERE 5');
         res.status(OK).json({message: 'Successfully created a new entry'}) 
     } catch (error) {
       await defaultErrorHandler(error, req, res);
