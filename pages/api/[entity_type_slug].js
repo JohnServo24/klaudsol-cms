@@ -43,6 +43,7 @@ export default withSession(handler);
 export const config = {
   api: {
     bodyParser: false,
+    responseLimit: false
   },
 };
 
