@@ -33,10 +33,9 @@ import { setCORSHeaders, parseFormData } from "@klaudsol/commons/lib/API";
 import { createHash } from "@/lib/Hash";
 import { addFilesToBucket, generateEntries } from "@backend/data_access/S3";
 import { transformQuery, sortData } from "@/components/Util";
-import { assert, assertUserCan } from '@klaudsol/commons/lib/Permissions';
-import { filterData } from '@/components/Util';
-import { readContents, writeContents } from '@/lib/Constants';
-
+import { assert, assertUserCan } from "@klaudsol/commons/lib/Permissions";
+import { filterData } from "@/components/Util";
+import { readContents, writeContents } from "@/lib/Constants";
 
 export default withSession(handler);
 
@@ -47,17 +46,17 @@ export const config = {
 };
 
 async function handler(req, res) {
+  console.log("I AM HERE 1");
   try {
     switch (req.method) {
       case "GET":
         return await get(req, res);
       case "POST":
-        console.log('I AM HERE 1');
         const { req: parsedReq, res: parsedRes } = await parseFormData(
           req,
           res
         );
-        console.log('I AM HERE 2');
+        console.log("I AM HERE 2");
         return await create(parsedReq, parsedRes);
       default:
         throw new Error(`Unsupported method: ${req.method}`);
@@ -67,32 +66,38 @@ async function handler(req, res) {
   }
 }
 
-  async function get(req, res) { 
-    try {
-      const { entity_type_slug, entry, page, sort:sortValue, ...queries } = req.query;
-      const rawData = await Entity.where(
-        { entity_type_slug, entry, page },
-        queries
-      );
-      const rawEntityType = await EntityType.find({ slug: entity_type_slug });
-  
-      const initialFormat = {
-        indexedData: {},
-      };
-  
-      const dataTemp = rawData.data.reduce((collection, item) => {
-        return {
-          indexedData: {
-            ...collection.indexedData,
-            [item.id]: {
-              ...collection.indexedData[item.id],
-              ...(!collection.indexedData[item.id]?.id && { id: item.id }),
-              ...(!collection.indexedData[item.id]?.slug && {
-                slug: item.entities_slug,
-              }),
-              ...(!collection.indexedData[item.id]?.[item.attributes_name] && {
-                [item.attributes_name]: resolveValue(item),
-              }),
+async function get(req, res) {
+  try {
+    const {
+      entity_type_slug,
+      entry,
+      page,
+      sort: sortValue,
+      ...queries
+    } = req.query;
+    const rawData = await Entity.where(
+      { entity_type_slug, entry, page },
+      queries
+    );
+    const rawEntityType = await EntityType.find({ slug: entity_type_slug });
+
+    const initialFormat = {
+      indexedData: {},
+    };
+
+    const dataTemp = rawData.data.reduce((collection, item) => {
+      return {
+        indexedData: {
+          ...collection.indexedData,
+          [item.id]: {
+            ...collection.indexedData[item.id],
+            ...(!collection.indexedData[item.id]?.id && { id: item.id }),
+            ...(!collection.indexedData[item.id]?.slug && {
+              slug: item.entities_slug,
+            }),
+            ...(!collection.indexedData[item.id]?.[item.attributes_name] && {
+              [item.attributes_name]: resolveValue(item),
+            }),
           },
         },
       };
@@ -121,10 +126,10 @@ async function handler(req, res) {
 
     const data = Object.values(dataTemp.indexedData);
 
-    const output = { 
+    const output = {
       data,
       metadata,
-    }
+    };
 
     output.metadata.hash = createHash(output);
 
@@ -138,32 +143,35 @@ async function handler(req, res) {
   }
 }
 
-async function create(req, res) { 
-    try {
-        await assert({
-            loggedIn: true,
-        }, req);
+async function create(req, res) {
+  try {
+    await assert(
+      {
+        loggedIn: true,
+      },
+      req
+    );
 
-        console.log('I AM HERE 3');
-        await assertUserCan(readContents, req) &&
-        await assertUserCan(writeContents, req);
-        console.log('I AM HERE 4');
-        
-        const { files, body: bodyRaw } = req;
-        const body = JSON.parse(JSON.stringify(bodyRaw));
+    console.log("I AM HERE 3");
+    (await assertUserCan(readContents, req)) &&
+      (await assertUserCan(writeContents, req));
+    console.log("I AM HERE 4");
 
-        if (files.length > 0) {
-          const resFromS3 = await addFilesToBucket(files, body);
-          const entries = generateEntries(resFromS3, files, body);
+    const { files, body: bodyRaw } = req;
+    const body = JSON.parse(JSON.stringify(bodyRaw));
 
-          await Entity.create(entries);
-        } else {
-          await Entity.create(body);
-        }
+    if (files.length > 0) {
+      const resFromS3 = await addFilesToBucket(files, body);
+      const entries = generateEntries(resFromS3, files, body);
 
-        console.log('I AM HERE 5');
-        res.status(OK).json({message: 'Successfully created a new entry'}) 
-    } catch (error) {
-      await defaultErrorHandler(error, req, res);
+      await Entity.create(entries);
+    } else {
+      await Entity.create(body);
     }
+
+    console.log("I AM HERE 5");
+    res.status(OK).json({ message: "Successfully created a new entry" });
+  } catch (error) {
+    await defaultErrorHandler(error, req, res);
+  }
 }
