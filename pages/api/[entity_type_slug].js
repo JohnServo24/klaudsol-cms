@@ -150,6 +150,9 @@ async function create(req, res) {
         const { files, body: bodyRaw } = req;
         const body = JSON.parse(JSON.stringify(bodyRaw));
 
+        console.log(body);
+        console.log(files);
+
         if (files.length > 0) {
           const resFromS3 = await addFilesToBucket(files, body);
           const entries = generateEntries(resFromS3, files, body);
